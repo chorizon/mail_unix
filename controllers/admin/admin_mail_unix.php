@@ -9,6 +9,7 @@ use PhangoApp\PhaLibs\AdminUtils;
 use PhangoApp\PhaLibs\SimpleList;
 use PhangoApp\PhaI18n\I18n;
 use PhangoApp\PhaRouter\Routes;
+use Chorizon\TheServers\Task;
 
 function Mail_unixAdmin()
 {
@@ -65,42 +66,54 @@ function Mail_unixAdmin()
             if(Routes::$request_method=='POST')
             {
             
-                if($model->mail_server_unix->insert($_POST))
-                {
+                /*if($model->mail_server_unix->insert($_POST))
+                {*/
+                //Create task
                 
-                    //Add ajax for connect
-                    /*
-                    ob_start();
-                    
-                    ?>
-                    <script language="javascript">
-                        $(document).ready( function () {
-                        
-                            //Ajax calling to make script
-                        
-                        });
-                    </script>
-                    <?php
-                    
-                    View::$header[]=ob_get_contents();
-                    
-                    ob_end_clean();
-                    */
-                    
-                    $post=ModelForm::check_form($model->mail_server_unix->forms, $_POST);
+                $_POST['status']=0;
+                
+                $post=ModelForm::check_form($model->mail_server_unix->forms, $_POST);
+                
+                //if($model->mail_server_unix->insert($_POST))
+                if($post!=0)
+                {
 
-                    $arr_server=$model->server->select_a_row($post['server']);
-                    
-                    print_r($arr_server);
+                    /*$arr_server=$model->server->select_a_row($post['server']);
                     
                     $server_to_call=$arr_server['ip'];
                     
-                    $arguments='--domain '.$post['domain'];
+                    $arguments='--domain '.$post['domain'];*/
                     
-                    echo View::load_view(array('server_to_call' => $server_to_call, 'category' => 'mail', 'module' => 'mail_unix', 'script' => 'add_domain', 'arguments' => $arguments), 'ajax/ajaxserver', 'chorizon/pastafari');
+                    //Executing asinchronous script
+                    
+                    /*
+                    $task->register('pid', new IntegerField(11), true);
+
+                    $task->register('ip', new CharField(255), true);
+
+                    $task->register('title', new CharField(255), true);
+                    
+                    $task->register('category', new CharField(255), true);
+
+                    $task->register('module', new CharField(255), true);
+
+                    $task->register('script', new CharField(255), true);
+
+                    $task->register('arguments', new ArrayField(new CharField(255)), true);
+
+                    $task->register('status', new BooleanField());
+                    */
+                    
+                    $arguments=array('domain' => $post['domain']);
+                    
+                    //Beginning task
+                    
+                    $return_url=AdminUtils::set_admin_link('mail_unix', array('op' => 2) );
+                    
+                    Task::begin_task( array('server' => $post['server'], 'title' => I18n::lang('mail_unix', 'add_domain', 'Creating a new domain'), 'category' => 'chorizon', 'module' => 'mail_unix', 'script' => 'add_domain', 'arguments' => $arguments, 'return' => $return_url) );
+                    
+                    //echo View::load_view(array('server_to_call' => $server_to_call, 'title' => I18n::lang('mail_unix', 'add_domain', 'Creating a new domain'), 'category' => 'mail', 'module' => 'mail_unix', 'script' => 'add_domain', 'arguments' => $arguments), 'ajax/ajaxserver', 'chorizon/pastafari');
                     //Create user in 
-                
-                
                     //Routes::redirect(AdminUtils::set_admin_link('mail_unix', array('op' => 0)));
                 
                 }
@@ -120,6 +133,14 @@ function Mail_unixAdmin()
                 echo View::load_view(array($model->mail_server_unix->forms, array(), 'POST', $action, ''), 'forms/updatemodelform');
         
             }
+        
+        break;
+        
+        //Here obtain information about progress
+        
+        case 2:
+        
+                
         
         break;
         

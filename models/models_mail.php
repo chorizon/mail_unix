@@ -4,6 +4,7 @@ use PhangoApp\PhaModels\Webmodel;
 use PhangoApp\PhaModels\CoreFields\ForeignKeyField;
 use PhangoApp\PhaModels\CoreFields\IntegerField;
 use PhangoApp\PhaModels\CoreFields\CharField;
+use PhangoApp\PhaModels\CoreFields\BooleanField;
 
 Webmodel::load_model('vendor/chorizon/theservers/models/models_servers');
 Webmodel::load_model('vendor/chorizon/theusers/models/models_theusers');
@@ -19,5 +20,7 @@ $mail_server->register('server', new ForeignKeyField(Webmodel::$model['server'])
 $mail_server->register('quota', new IntegerField(11));
 
 $mail_server->register('num_accounts', new IntegerField(11), false);
+
+$mail_server->register('status', new BooleanField(11));
 
 ?>
