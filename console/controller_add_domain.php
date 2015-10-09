@@ -129,7 +129,7 @@ function add_domainConsole()
                             if($arr_body['PROGRESS']==100)
                             {
                             
-                                break;
+                                $done=true;
                             
                             }
                         
