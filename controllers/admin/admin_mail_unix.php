@@ -140,7 +140,33 @@ function Mail_unixAdmin()
         
         case 2:
         
-                
+            settype($_GET['task_id'], 'integer');
+    
+            $url_to_progress=AdminUtils::set_admin_link('mail_unix', array('op' => 3, 'task_id' => $_GET['task_id']) );
+    
+            echo View::load_view(array('url_to_progress' => $url_to_progress, 'title' => I18n::lang('mail_unix', 'add_domain', 'Creating a new domain'), 'category' => 'mail', 'module' => 'mail_unix', 'script' => 'add_domain'), 'ajax/ajaxserver', 'chorizon/pastafari');
+        
+        break;
+        
+        case 3:
+        
+            ob_end_clean();
+        
+            settype($_GET['task_id'], 'integer');
+        
+            $model->log_task->conditions='where task_id='.$_GET['task_id'];
+            
+            $model->log_task->order_by='order by id DESC';
+            
+            $model->log_task->limit='limit 1';
+        
+            $arr_log=$model->log_task->select_a_row_where();
+            
+            header('Content-type: text/plain');
+            
+            echo json_encode($arr_log);
+            
+            die;
         
         break;
         
