@@ -104,13 +104,17 @@ function Mail_unixAdmin()
                     $task->register('status', new BooleanField());
                     */
                     
-                    $arguments=array('domain' => $post['domain']);
+                    //--domain, --user, --quota, --num_accounts, --filesystem
+                    
+                    $arr_user=Webmodel::$model['theuser']->select_a_row($post['user'], array('username'));
+                    
+                    $arguments=array('domain' => $post['domain'], 'quota' => $post['quota'], 'num_accounts' => $post['num_accounts'], 'filesystem' => $post['filesystem'], 'user' => $arr_user['username'] );
                     
                     //Beginning task
                     
                     $return_url=AdminUtils::set_admin_link('mail_unix', array('op' => 2) );
                     
-                    Task::begin_task( array('server' => $post['server'], 'title' => I18n::lang('mail_unix', 'add_domain', 'Creating a new domain'), 'category' => 'chorizon', 'module' => 'mail_unix', 'script' => 'add_domain', 'arguments' => $arguments, 'return' => $return_url) );
+                    Task::begin_task( array('server' => $post['server'], 'title' => I18n::lang('mail_unix', 'add_domain', 'Creating a new domain'), 'category' => 'chorizon', 'module' => 'mail_unix', 'script' => 'add_domain', 'arguments' => $arguments, 'extra_arguments' => array('user_id' => $post['user']), 'return' => $return_url) );
                     
                     //echo View::load_view(array('server_to_call' => $server_to_call, 'title' => I18n::lang('mail_unix', 'add_domain', 'Creating a new domain'), 'category' => 'mail', 'module' => 'mail_unix', 'script' => 'add_domain', 'arguments' => $arguments), 'ajax/ajaxserver', 'chorizon/pastafari');
                     //Create user in 

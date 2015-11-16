@@ -21,6 +21,8 @@ $mail_server->register('quota', new IntegerField(11));
 
 $mail_server->register('num_accounts', new IntegerField(11), false);
 
+$mail_server->register('filesystem', new IntegerField(11), false);
+
 $mail_server->register('status', new BooleanField(11));
 
 ?>
