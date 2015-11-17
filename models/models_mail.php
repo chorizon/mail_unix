@@ -15,13 +15,13 @@ $mail_server->register('domain', new CharField(255), true);
 
 $mail_server->register('user', new ForeignKeyField(Webmodel::$model['theuser']), true);
 
+$mail_server->set_field('user', array('name_field_to_field' => 'username'));
+
 $mail_server->register('server', new ForeignKeyField(Webmodel::$model['server']), true);
 
 $mail_server->register('quota', new IntegerField(11));
 
 $mail_server->register('num_accounts', new IntegerField(11), false);
-
-$mail_server->register('filesystem', new IntegerField(11), false);
 
 $mail_server->register('status', new BooleanField(11));
 
