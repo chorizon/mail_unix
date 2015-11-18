@@ -27,6 +27,26 @@ function Mail_unixAdmin()
     
     #$arr_link_options[0]=array('link' => AdminUtils::set_admin_link('mail_unix', array('op' => 0)), 'text' => I18n::lang('mail_unix', 'domains', 'Domains'));
     
+    $model->mail_server_unix->components['server']->form='PhangoApp\PhaModels\Forms\SelectModelForm';
+            
+    $model->mail_server_unix->components['user']->form='PhangoApp\PhaModels\Forms\SelectModelForm';
+    
+    $model->mail_server_unix->create_forms();
+    
+    $model->mail_server_unix->forms['server']->model=&$model->server;
+    
+    $model->mail_server_unix->forms['server']->field_value='id';
+    
+    $model->mail_server_unix->forms['server']->field_name='hostname';
+    
+    $model->mail_server_unix->forms['server']->conditions='WHERE type="mail_unix"';
+    
+    $model->mail_server_unix->forms['user']->model=&$model->theuser;
+    
+    $model->mail_server_unix->forms['user']->field_value='id';
+    
+    $model->mail_server_unix->forms['user']->field_name='username';
+    
     settype($_GET['op'], 'integer');
     
     switch($_GET['op'])
@@ -57,27 +77,7 @@ function Mail_unixAdmin()
             settype($_GET['domain_id'], 'integer');
         
             echo '<h3>'.I18n::lang('mail_unix', 'add_domain', 'Add new domain').'</h3>';
-            
-            $model->mail_server_unix->components['server']->form='PhangoApp\PhaModels\Forms\SelectModelForm';
-            
-            $model->mail_server_unix->components['user']->form='PhangoApp\PhaModels\Forms\SelectModelForm';
-            
-            $model->mail_server_unix->create_forms();
-            
-            $model->mail_server_unix->forms['server']->model=&$model->server;
-            
-            $model->mail_server_unix->forms['server']->field_value='id';
-            
-            $model->mail_server_unix->forms['server']->field_name='hostname';
-            
-            $model->mail_server_unix->forms['server']->conditions='WHERE type="mail_unix"';
-            
-            $model->mail_server_unix->forms['user']->model=&$model->theuser;
-            
-            $model->mail_server_unix->forms['user']->field_value='id';
-            
-            $model->mail_server_unix->forms['user']->field_name='username';
-            
+                        
             $action=AdminUtils::set_admin_link('mail_unix', array('op' => 1));
             
             if(Routes::$request_method=='POST')
@@ -193,6 +193,71 @@ function Mail_unixAdmin()
         
         break;
         
+        case 4:
+        
+            settype($_GET['domain_id'], 'integer');
+            
+            $model->mail_server_unix->reset_require();
+            
+            $model->mail_server_unix->components['server']->name_field_to_field='hostname';
+            
+            $model->mail_server_unix->components['server']->fields_related_model=array('id');
+        
+            $model->mail_server_unix->components['server']->form='PhangoApp\PhaModels\Forms\NoForm';
+            $model->mail_server_unix->components['domain']->form='PhangoApp\PhaModels\Forms\NoForm';
+            $model->mail_server_unix->components['user']->form='PhangoApp\PhaModels\Forms\NoForm';
+            
+            $model->mail_server_unix->create_forms();
+        
+            unset($model->mail_server_unix->forms['status']);
+        
+            $arr_row=$model->mail_server_unix->select_a_row($_GET['domain_id']);
+            
+            settype($arr_row['IdMail_server_unix'], 'integer');
+            
+            if($arr_row['IdMail_server_unix']>0)
+            {
+        
+                echo '<h3>'.I18n::lang('mail_unix', 'edit_domain', 'Edit new domain').'</h3>';
+                            
+                $action=AdminUtils::set_admin_link('mail_unix', array('op' => 4, 'domain_id' => $_GET['domain_id']));
+            
+                if(Routes::$request_method=='POST')
+                {
+                    
+                    $post=ModelForm::check_form($model->mail_server_unix->forms, $_POST);
+                    
+                    //if($model->mail_server_unix->insert($_POST))
+                    if($post!=0)
+                    {
+                    
+                        $arguments=array('domain' => $arr_row['domain'],  'user' => $arr_row['user'] , 'quota' => $post['quota']);
+                        
+                        //Beginning task
+                        
+                        $return_url=AdminUtils::set_admin_link('mail_unix', array('op' => 2) );
+                        
+                        Task::begin_task( array('server' => $arr_row['server_id'], 'title' => I18n::lang('mail_unix', 'update_quota_domain', 'Update quota for a new domain'), 'category' => 'chorizon', 'module' => 'mail_unix', 'script' => 'update_quota_domain', 'arguments' => $arguments, 'extra_arguments' => array('domain_id' => $_GET['domain_id'], 'num_accounts' => $post['num_accounts']), 'return' => $return_url) );
+                    
+                    }
+                
+                }
+                else
+                {
+                
+                    //$model->mail_server_unix->create_forms();
+                    //echo $model->mail_server_unix->components['server']->form;
+                
+                    ModelForm::set_values_form($model->mail_server_unix->forms, $arr_row, $show_error=1);
+                        
+                    echo View::load_view(array($model->mail_server_unix->forms, array(), 'POST', $action, ''), 'forms/updatemodelform');
+                
+                }
+        
+            }
+        
+        break;
+        
         case 5:
         
             settype($_GET['yes_delete'], 'integer');
@@ -228,6 +293,7 @@ function Mail_unixAdmin()
             }
         
         break;
+        
     }
 
 }
