@@ -7,6 +7,7 @@ use PhangoApp\PhaModels\ModelForm;
 use PhangoApp\PhaUtils\MenuSelected;
 use PhangoApp\PhaLibs\AdminUtils;
 use PhangoApp\PhaLibs\SimpleList;
+use PhangoApp\PhaLibs\HierarchyLinks;
 use PhangoApp\PhaI18n\I18n;
 use PhangoApp\PhaRouter\Routes;
 use Chorizon\TheServers\Task;
@@ -49,6 +50,12 @@ function Mail_unixAdmin()
     
     settype($_GET['op'], 'integer');
     
+    $link_parent=AdminUtils::set_admin_link('mail_unix', array());
+    
+    $arr_links['']=array($link_parent => I18n::lang('common', 'home', 'Home'));
+    
+    $hierarchy=new HierarchyLinks($arr_links);
+    
     switch($_GET['op'])
     {
     
@@ -79,6 +86,10 @@ function Mail_unixAdmin()
             echo '<h3>'.I18n::lang('mail_unix', 'add_domain', 'Add new domain').'</h3>';
                         
             $action=AdminUtils::set_admin_link('mail_unix', array('op' => 1));
+            
+            $hierarchy->update_links($link_parent, $action, I18n::lang('mail_unix', 'add_domain', 'Add new domain'));
+            
+            echo $hierarchy->show($action);
             
             if(Routes::$request_method=='POST')
             {
@@ -163,33 +174,25 @@ function Mail_unixAdmin()
         
         case 2:
         
+            $action=AdminUtils::set_admin_link('mail_unix', array('op' => 2) );
+            
+            $hierarchy->update_links($link_parent, $action, I18n::lang('mail_unix', 'make_mail_task', 'Mail tasks progress'));
+            
+            echo '<p>'.$hierarchy->show($action).'</p>';
+        
             settype($_GET['task_id'], 'integer');
+            
+            $arr_row=$model->task->select_a_row($_GET['task_id'], array('title'));
     
             $url_to_progress=AdminUtils::set_admin_link('mail_unix', array('op' => 3, 'task_id' => $_GET['task_id']) );
     
-            echo View::load_view(array('url_to_progress' => $url_to_progress, 'title' => I18n::lang('mail_unix', 'add_domain', 'Creating a new domain'), 'category' => 'mail', 'module' => 'mail_unix', 'script' => 'add_domain'), 'theservers/progress', 'chorizon/theservers');
+            echo View::load_view(array('url_to_progress' => $url_to_progress, 'title' => $arr_row['title'], 'category' => 'mail', 'module' => 'mail_unix', 'script' => 'add_domain'), 'theservers/progress', 'chorizon/theservers');
         
         break;
         
         case 3:
         
             ob_end_clean();
-        
-            /*settype($_GET['task_id'], 'integer');
-        
-            $model->log_task->conditions='where task_id='.$_GET['task_id'];
-            
-            $model->log_task->order_by='order by id DESC';
-            
-            $model->log_task->limit='limit 1';
-        
-            $arr_log=$model->log_task->select_a_row_where();
-            
-            header('Content-type: text/plain');
-            
-            echo json_encode($arr_log);
-            
-            die;*/
             
             echo Task::get_progress($_GET['task_id']);
             
@@ -222,9 +225,15 @@ function Mail_unixAdmin()
             if($arr_row['IdMail_server_unix']>0)
             {
         
-                echo '<h3>'.I18n::lang('mail_unix', 'edit_domain', 'Edit new domain').'</h3>';
+                $title_edit=I18n::lang('mail_unix', 'edit_domain', 'Edit new domain');
+        
+                echo '<h3>'.$title_edit.'</h3>';
                             
                 $action=AdminUtils::set_admin_link('mail_unix', array('op' => 4, 'domain_id' => $_GET['domain_id']));
+                
+                $hierarchy->update_links($link_parent, $action, $title_edit);
+                
+                echo '<p>'.$hierarchy->show($action).'</p>';
             
                 if(Routes::$request_method=='POST')
                 {
@@ -270,9 +279,13 @@ function Mail_unixAdmin()
             if($_GET['yes_delete']==0)
             {
             
-                $hidden_fields=array('domain_id' => $_GET['domain_id'], 'yes_delete' => 1);
-            
                 $url=AdminUtils::set_admin_link('mail_unix', array('op' => 5) );
+                
+                $hierarchy->update_links($link_parent, $url, I18n::lang('mail_unix', 'delete_domain', 'Deleting a domain'));
+                
+                echo '<p>'.$hierarchy->show($url).'</p>';
+            
+                $hidden_fields=array('domain_id' => $_GET['domain_id'], 'yes_delete' => 1);
             
                 echo View::load_view(array($url, $hidden_fields), 'theservers/acceptdelete', 'chorizon/theservers');
             
