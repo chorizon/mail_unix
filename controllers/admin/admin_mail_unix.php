@@ -175,7 +175,7 @@ function Mail_unixAdmin()
         
             ob_end_clean();
         
-            settype($_GET['task_id'], 'integer');
+            /*settype($_GET['task_id'], 'integer');
         
             $model->log_task->conditions='where task_id='.$_GET['task_id'];
             
@@ -188,6 +188,10 @@ function Mail_unixAdmin()
             header('Content-type: text/plain');
             
             echo json_encode($arr_log);
+            
+            die;*/
+            
+            echo Task::get_progress($_GET['task_id']);
             
             die;
         
