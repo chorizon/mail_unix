@@ -15,6 +15,7 @@ function Mail_unixAdmin()
 {
 
     I18n::load_lang('mail_unix');
+    I18n::load_lang('common');
 
     Webmodel::load_model('vendor/chorizon/theusers/models/models_theusers');
     Webmodel::load_model('vendor/chorizon/theservers/models/models_servers');
@@ -41,11 +42,19 @@ function Mail_unixAdmin()
             
             $list->arr_fields_showed=array('domain', 'user');
             
+            $list->yes_options=false;
+            
+            $list->arr_extra_fields=array(I18n::lang('common', 'options', 'Options'));
+            
+            $list->arr_extra_fields_func=array('options_mail_unix');
+            
             $list->show();
         
         break;
         
         case 1:
+        
+            settype($_GET['domain_id'], 'integer');
         
             echo '<h3>'.I18n::lang('mail_unix', 'add_domain', 'Add new domain').'</h3>';
             
@@ -93,25 +102,7 @@ function Mail_unixAdmin()
                     $arguments='--domain '.$post['domain'];*/
                     
                     //Executing asinchronous script
-                    
-                    /*
-                    $task->register('pid', new IntegerField(11), true);
 
-                    $task->register('ip', new CharField(255), true);
-
-                    $task->register('title', new CharField(255), true);
-                    
-                    $task->register('category', new CharField(255), true);
-
-                    $task->register('module', new CharField(255), true);
-
-                    $task->register('script', new CharField(255), true);
-
-                    $task->register('arguments', new ArrayField(new CharField(255)), true);
-
-                    $task->register('status', new BooleanField());
-                    */
-                    
                     //--domain, --user, --quota, --num_accounts, --filesystem
                     
                     //Check if exists the same domain in database.
@@ -130,7 +121,7 @@ function Mail_unixAdmin()
                         
                         $return_url=AdminUtils::set_admin_link('mail_unix', array('op' => 2) );
                         
-                        Task::begin_task( array('server' => $post['server'], 'title' => I18n::lang('mail_unix', 'add_domain', 'Creating a new domain'), 'category' => 'chorizon', 'module' => 'mail_unix', 'script' => 'add_domain', 'arguments' => $arguments, 'extra_arguments' => array('user_id' => $post['user'], 'server_id' => $post['server']), 'return' => $return_url) );
+                        Task::begin_task( array('server' => $post['server'], 'title' => I18n::lang('mail_unix', 'add_domain', 'Creating a new domain'), 'category' => 'chorizon', 'module' => 'mail_unix', 'script' => 'add_domain', 'arguments' => $arguments, 'extra_arguments' => array('user_id' => $post['user'], 'server_id' => $post['server'], 'domain_id' => $_GET['domain_id']), 'return' => $return_url) );
                         
                         //echo View::load_view(array('server_to_call' => $server_to_call, 'title' => I18n::lang('mail_unix', 'add_domain', 'Creating a new domain'), 'category' => 'mail', 'module' => 'mail_unix', 'script' => 'add_domain', 'arguments' => $arguments), 'ajax/ajaxserver', 'chorizon/pastafari');
                         //Create user in 
@@ -202,8 +193,53 @@ function Mail_unixAdmin()
         
         break;
         
+        case 5:
         
+            settype($_GET['yes_delete'], 'integer');
+            settype($_GET['domain_id'], 'integer');
+            
+            if($_GET['yes_delete']==0)
+            {
+            
+                $hidden_fields=array('domain_id' => $_GET['domain_id'], 'yes_delete' => 1);
+            
+                $url=AdminUtils::set_admin_link('mail_unix', array('op' => 5) );
+            
+                echo View::load_view(array($url, $hidden_fields), 'theservers/acceptdelete', 'chorizon/theservers');
+            
+            }
+            else
+            {
+            
+                $arr_domain=Webmodel::$model['mail_server_unix']->select_a_row($_GET['domain_id']);
+                
+                settype($arr_domain['IdMail_server_unix'], 'integer');
+                
+                if($arr_domain['IdMail_server_unix']>0)
+                {
+            
+                    $return_url=AdminUtils::set_admin_link('mail_unix', array('op' => 2) );
+                    
+                    $arguments=array('domain' => $arr_domain['domain'], 'user' => $arr_domain['user']);
+                    
+                    Task::begin_task( array('server' => $arr_domain['server'], 'title' => I18n::lang('mail_unix', 'delete_domain', 'Deleting a domain'), 'category' => 'chorizon', 'module' => 'mail_unix', 'script' => 'delete_domain', 'arguments' => $arguments, 'extra_arguments' => array('domain_id' => $arr_domain['IdMail_server_unix']), 'return' => $return_url) );
+                }
+                
+            }
+        
+        break;
     }
+
+}
+
+function options_mail_unix($arr_row)
+{
+
+    $arr_urls[]='<a href="'.AdminUtils::set_admin_link('mail_unix', array('op' => 4, 'domain_id' => $arr_row['IdMail_server_unix'])).'">'.I18n::lang('common', 'edit', 'Edit').'</a>';
+    
+    $arr_urls[]='<a href="'.AdminUtils::set_admin_link('mail_unix', array('op' => 5, 'domain_id' => $arr_row['IdMail_server_unix'])).'">'.I18n::lang('common', 'delete', 'Delete').'</a>';
+
+    return implode('<br />', $arr_urls);
 
 }
 
